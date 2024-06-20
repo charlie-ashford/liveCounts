@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Subscriber Count</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+        margin: 0;
+    }
+    .container {
+        text-align: center;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .profile-pic {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-bottom: 20px;
+    }
+    .odometer {
+        font-size: 24px;
+        color: #333;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/odometer.js/0.4.8/odometer.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/odometer.js/0.4.8/themes/odometer-theme-default.css" />
+</head>
+<body>
+<div class="container">
+    <img src="" alt="Profile Picture" class="profile-pic">
+    <h1 id="channelName">Loading...</h1>
+    <div id="subscriberCount" class="odometer">0</div>
+    Subscribers
+</div>
+
+<script>
+    const subscriberCountElement = document.getElementById('subscriberCount');
+    const channelNameElement = document.getElementById('channelName');
+    const profilePicElement = document.querySelector('.profile-pic');
+
+    function fetchData() {
+        fetch('https://api.communitrics.com/UCq-Fj5jknLsUf-MWSy4_brA')
+        .then(response => response.json()) 
+        .then(data => {
+            channelNameElement.textContent = data.channelDetails.name;
+            subscriberCountElement.innerHTML = data.channelDetails.linearEstSubscriberCount;
+            profilePicElement.src = data.channelDetails.profilePicture;
+            profilePicElement.alt = data.channelDetails.name + " Profile Picture";
+        })
+        .catch(error => console.error('Error fetching data:', error)); 
+    }
+
+    fetchData();
+
+    setInterval(fetchData, 1800);
+</script>
+</body>
+</html>
