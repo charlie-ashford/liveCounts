@@ -4,33 +4,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live Subscriber Count</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.min.js"></script>
 <style>
+    :root {
+        --bg-color: #121212;
+        --box-bg-color: #202020;
+        --text-color: #ffffff;
+        --accent-color: #ff1744; 
+        --hover-color: #d50000;  
+        --input-bg-color: #333333;
+        --input-text-color: #ffffff;
+        --shadow-color: rgba(0,0,0,0.2);
+    }
     body {
         font-family: 'Inter', sans-serif;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        background-color: #f4f4f4;
+        min-height: 100vh;
+        background-color: var(--bg-color);
         margin: 0;
+        color: var(--text-color);
     }
     .container {
-        text-align: center;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--box-bg-color);
+        padding: 50px;
+        border-radius: 15px;
+        box-shadow: 0 15px 30px var(--shadow-color);
+        width: 85%;
+        max-width: 850px;
     }
     .profile-pic {
-        width: 80px;
-        height: 80px;
+        width: 180px;
+        height: 180px;
         border-radius: 50%;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
+        border: 5px solid var(--accent-color);
     }
     .odometer {
+        font-size: 60px;
+        color: var(--text-color);
+        margin: 20px 0;
+        font-weight: 600;
+    }
+    h1 {
+        font-size: 42px;
+        margin-bottom: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+    h1:hover {
+        color: var(--accent-color);
+    }
+    p {
         font-size: 24px;
-        color: #333;
+        color: #cccccc;
+    }
+    input, button {
+        font-size: 18px;
+        padding: 12px 20px;
+        margin-top: 25px;
+        border: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+    input {
+        background-color: var(--input-bg-color);
+        color: var(--input-text-color);
+        width: 50%;
+        box-sizing: border-box;  
+    }
+    button {
+        background-color: var(--accent-color);
+        color: var(--text-color);
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: var(--hover-color);
     }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/odometer.js/0.4.8/odometer.min.js"></script>
@@ -39,31 +95,92 @@
 <body>
 <div class="container">
     <img src="" alt="Profile Picture" class="profile-pic">
-    <h1 id="channelName">Loading...</h1>
+    <h1 id="channelName" onclick="redirectToChannel()">Enter Channel ID</h1>
     <div id="subscriberCount" class="odometer">0</div>
-    Subscribers
+    <p>Subscribers</p>
+    <input type="text" id="channelIdInput" placeholder="Enter YouTube Channel ID">
+    <button onclick="fetchData()">Search</button>
 </div>
 
 <script>
-    const subscriberCountElement = document.getElementById('subscriberCount');
-    const channelNameElement = document.getElementById('channelName');
-    const profilePicElement = document.querySelector('.profile-pic');
+const subscriberCountElement = document.getElementById('subscriberCount');
+const channelNameElement = document.getElementById('channelName');
+const profilePicElement = document.querySelector('.profile-pic');
+const channelIdInput = document.getElementById('channelIdInput');
+const subscribersTextElement = document.querySelector('p'); 
+let currentChannelId = '';
 
-    function fetchData() {
-        fetch('https://api.communitrics.com/UCq-Fj5jknLsUf-MWSy4_brA')
-        .then(response => response.json()) 
-        .then(data => {
-            channelNameElement.textContent = data.channelDetails.name;
-            subscriberCountElement.innerHTML = data.channelDetails.linearEstSubscriberCount;
-            profilePicElement.src = data.channelDetails.profilePicture;
-            profilePicElement.alt = data.channelDetails.name + " Profile Picture";
-        })
-        .catch(error => console.error('Error fetching data:', error)); 
+function redirectToChannel() {
+    if (currentChannelId) {
+        window.location.href = `https://youtube.com/channel/${currentChannelId}`;
     }
+}
 
-    fetchData();
+function formatSubscriberCount(subCount) {
+    if (subCount >= 1000000) {
+        return `(${Math.floor(subCount / 1000000)}M) Subscribers`;
+    } else if (subCount >= 1000) {
+        return `(${Math.floor(subCount / 1000)}K) Subscribers`;
+    } else {
+        return `(0) Subscribers`;
+    }
+}
 
-    setInterval(fetchData, 1800);
+function fetchData() {
+    currentChannelId = channelIdInput.value || 'UCX6OQ3DkcsbYNE6H8uQQuVA'; 
+    const fetchUrl = `https://api.communitrics.com/${currentChannelId}`;
+    
+    fetch(fetchUrl)
+    .then(response => response.json()) 
+    .then(data => {
+        channelNameElement.textContent = data.channelDetails.name;
+        channelNameElement.onclick = redirectToChannel;
+        subscriberCountElement.innerHTML = data.channelDetails.linearEstSubscriberCount;
+        profilePicElement.src = data.channelDetails.profilePicture;
+        profilePicElement.alt = data.channelDetails.name + " Profile Picture";
+        subscribersTextElement.textContent = formatSubscriberCount(data.channelDetails.linearEstSubscriberCount);
+
+        setAccentColor(data.channelDetails.profilePicture);
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error);
+        channelNameElement.textContent = "Error loading data";
+        subscriberCountElement.innerHTML = "N/A";
+        profilePicElement.src = "";
+        profilePicElement.alt = "Error loading profile picture";
+        subscribersTextElement.textContent = "Error loading subscribers data";
+    }); 
+}
+
+function getVibrancy(rgb) {
+    const max = Math.max(rgb[0], rgb[1], rgb[2]);
+    const min = Math.min(rgb[0], rgb[1], rgb[2]);
+    const saturation = max - min;
+    const brightness = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+    return saturation * brightness;
+}
+
+function getMostVibrantColor(palette) {
+    return palette.reduce((mostVibrant, color) => getVibrancy(color) > getVibrancy(mostVibrant) ? color : mostVibrant);
+}
+
+function setAccentColor(imageUrl) {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous'; 
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const colorThief = new ColorThief();
+        const palette = colorThief.getPalette(canvas, 5);
+        const mostVibrantColor = getMostVibrantColor(palette); 
+        document.documentElement.style.setProperty('--accent-color', `rgb(${mostVibrantColor[0]}, ${mostVibrantColor[1]}, ${mostVibrantColor[2]})`);
+    };
+    img.src = imageUrl;
+}
+
+fetchData();
+setInterval(fetchData, 2000);
 </script>
-</body>
-</html>
