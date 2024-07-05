@@ -52,6 +52,7 @@
         color: var(--text-color);
         margin: 20px 0;
         font-weight: 600;
+        transition: all 0.5s ease-in-out;
     }
     h1 {
         font-size: 42px;
@@ -118,7 +119,6 @@
         <input type="text" id="channelIdInput" placeholder="Enter YouTube Channel Name or ID">
         <button onclick="searchChannel()">Search</button>
     </div>
-</div>
 
 <script>
     const subscriberCountElement = document.getElementById("subscriberCount");
@@ -190,7 +190,9 @@
                 );
 
                 channelNameElement.textContent = lastKnownValues.channelName;
-                subscriberCountElement.innerHTML = lastKnownValues.subscriberCount;
+                setTimeout(() => {
+                    subscriberCountElement.innerHTML = lastKnownValues.subscriberCount;
+                }, 500);  // Delay update to match transition
                 profilePicElement.src = lastKnownValues.profilePic;
                 profilePicElement.alt = lastKnownValues.channelName + " Profile Picture";
                 subscribersTextElement.textContent = lastKnownValues.subscribersText;
