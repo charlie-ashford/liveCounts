@@ -6,6 +6,7 @@
 <title>Live Subscriber Count</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     :root {
         --bg-color: #121212;
@@ -13,7 +14,7 @@
         --text-color: #ffffff;
         --accent-color: #ff1744; 
         --hover-color: #d50000;  
-        --input-bg-color: #333333;
+        --input-bg-color: rgb(45, 45, 45);
         --input-text-color: #ffffff;
         --shadow-color: rgba(0,0,0,0.2);
         --progress-bg: #555555;
@@ -39,6 +40,7 @@
         box-shadow: 0 15px 30px var(--shadow-color);
         width: 85%;
         max-width: 850px;
+        position: relative;
     }
     .profile-pic {
         width: 180px;
@@ -53,6 +55,22 @@
         margin: 20px 0;
         font-weight: 600;
         transition: all 0.5s ease-in-out;
+        position: relative;
+        z-index: 2;
+    }
+    .chart-container {
+        position: absolute;
+        top: 10%;
+        left: 0;
+        width: 100%;
+        height: 90%;
+        opacity: 0.3;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .chart-container canvas {
+        width: 100%;
+        height: 100%;
     }
     h1 {
         font-size: 42px;
@@ -111,6 +129,9 @@
     <div class="container">
         <img src="" alt="Profile Picture" class="profile-pic">
         <h1 id="channelName" onclick="redirectToChannel()">Enter Channel ID</h1>
+        <div class="chart-container">
+            <canvas id="subscriberChart"></canvas>
+        </div>
         <div id="subscriberCount" class="odometer">0</div>
         <p>Subscribers</p>
         <div class="progress-container">
@@ -134,10 +155,31 @@
         profilePic: "",
         subscribersText: "Subscribers"
     };
+    let subscriberChart;
 
     function redirectToChannel() {
         if (currentChannelId) {
             window.location.href = `https://youtube.com/channel/${currentChannelId}`;
+        }
+    }
+
+    function updateChartData(newSubscriberCount) {
+        if (!subscriberChart) {
+            console.error("Chart not initialized");
+            return;
+        }
+
+        try {
+            const timestamp = new Date().toLocaleTimeString();
+            subscriberChart.data.labels.push(timestamp);
+            subscriberChart.data.datasets[0].data.push(newSubscriberCount);
+            if (subscriberChart.data.labels.length > 50) {
+                subscriberChart.data.labels.shift();
+                subscriberChart.data.datasets[0].data.shift();
+            }
+            subscriberChart.update();
+        } catch (error) {
+            console.error("Error updating chart:", error);
         }
     }
 
@@ -192,7 +234,10 @@
                 channelNameElement.textContent = lastKnownValues.channelName;
                 setTimeout(() => {
                     subscriberCountElement.innerHTML = lastKnownValues.subscriberCount;
-                }, 500);  // Delay update to match transition
+                    if (subscriberChart) {
+                        updateChartData(lastKnownValues.subscriberCount);
+                    }
+                }, 500); 
                 profilePicElement.src = lastKnownValues.profilePic;
                 profilePicElement.alt = lastKnownValues.channelName + " Profile Picture";
                 subscribersTextElement.textContent = lastKnownValues.subscribersText;
@@ -239,6 +284,9 @@
                 "--accent-color",
                 `rgb(${mostVibrantColor[0]}, ${mostVibrantColor[1]}, ${mostVibrantColor[2]})`,
             );
+            subscriberChart.data.datasets[0].borderColor = `rgb(${mostVibrantColor[0]}, ${mostVibrantColor[1]}, ${mostVibrantColor[2]})`;
+            subscriberChart.data.datasets[0].backgroundColor = `rgba(${mostVibrantColor[0]}, ${mostVibrantColor[1]}, ${mostVibrantColor[2]}, 0.2)`;
+            subscriberChart.update();
         };
         img.src = imageUrl;
     }
@@ -278,6 +326,42 @@
             if (event.key === "Enter") {
                 searchChannel();
             }
+        });
+
+        const ctx = document.getElementById('subscriberChart').getContext('2d');
+        subscriberChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Subscribers',
+                    data: [],
+                    borderColor: 'rgba(255, 23, 68, 1)',
+                    backgroundColor: 'rgba(255, 23, 68, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        display: false,
+                    },
+                    y: {
+                        display: false,
+                    },
+                },
+                animation: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                },
+            },
         });
     });
 </script>    
