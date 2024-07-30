@@ -321,7 +321,7 @@
         const initialChannelId =
             urlParams.get("id") || "UCX6OQ3DkcsbYNE6H8uQQuVA";
         fetchData(initialChannelId);
-        setInterval(() => fetchData(currentChannelId), 1000);
+        setInterval(() => fetchData(currentChannelId), 2000);
 
         channelIdInput.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
