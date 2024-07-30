@@ -300,6 +300,7 @@
                 .then((data) => {
                     const channelId = data.channelId;
                     fetchData(channelId);
+                    window.history.pushState(null, '', `?id=${channelId}`);
                 })
                 .catch((error) => {
                     console.error("Error searching channel:", error);
@@ -318,9 +319,9 @@
     document.addEventListener("DOMContentLoaded", () => {
         const urlParams = new URLSearchParams(window.location.search);
         const initialChannelId =
-            urlParams.get("channelId") || "UCX6OQ3DkcsbYNE6H8uQQuVA";
+            urlParams.get("id") || "UCX6OQ3DkcsbYNE6H8uQQuVA";
         fetchData(initialChannelId);
-        setInterval(() => fetchData(currentChannelId), 2000);
+        setInterval(() => fetchData(currentChannelId), 1000);
 
         channelIdInput.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
